@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <style type="text/css">
+         .beat {
+            margin: 0.2em;
+            display: inline-block;
+         }
+      </style>
+   </head>
+      <body>
+         <nav class="light-blue lighten-1" role="navigation">
+       <div class="nav-wrapper container">
+         <a id="logo-container" href="#" class="brand-logo">
+            <i class="material-icons">insert_chart</i> BeatBox
+         </a>
+       </div>
+     </nav>
+
+      <div class="container" id="root">
+      <br>
+      </div>
+
+      <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+      <script src="https://unpkg.com/react@15/dist/react.js"></script>
+      <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+
+      <script>AUTOBAHN_DEBUG = true;</script>
+      <script src="http://autobahn.s3.amazonaws.com/autobahnjs/latest/autobahn.min.jgz"></script>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+      <script type="text/babel">
+         var wsuri;
+         if (document.location.origin == "file://") {
+            wsuri = "ws://127.0.0.1:8080/ws";
+
+         } else {
+            wsuri = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
+                        document.location.host + "/ws";
+         }
+
+         var connection = new autobahn.Connection({
+            url: wsuri,
+            realm: "realm1"
+         });
+
+         const App = React.createClass({
+             getInitialState: function(){
+                 return {songs: []};
+             },
+            componentDidMount: function() {
+               console.log("App Mounted");
+               this.updateSongs();
+            },
+            updateSongs: function (){
+               this.props.session.call('nefliers.beatbox.samples.list', []).then(
+                  function (res) {
+                     console.log(res);
+                     this.setState({songs:res});
+                  }.bind(this),
+                  function (err) {
+                     console.error("list() error:", err);
+                  }.bind(this)
+               );
+            },
+            buttonCallback: function(name) {
+               console.log("Should call " + name)
+               this.props.session.call('nefliers.beatbox.samples.play', [name]).then(
+                  function (res) {
+                     console.log(res);
+                  }.bind(this),
+                  function (err) {
+                     console.error("play() error:", err);
+                  }.bind(this)
+               );
+            },
+            render: function() {
+               if(this.state.songs.length == 0){
+                  return (
+                     <div>
+                        <br/><br/><br/><br/><br/><br/><br/>
+                        <h5>Loading...</h5>
+                        <div className="progress">
+                           <div className="indeterminate red"></div>
+                        </div>
+                     </div>
+                  );
+               }
+               return <div>
+                     <br/>
+                     {this.state.songs.map(function(name){
+                        return <SampleButton name={name} key={name} callback={this.buttonCallback}/>;
+                     }.bind(this))}
+                     <div className="fixed-action-btn">
+                        <a className="btn-floating btn-large red">
+                           <i className="large material-icons">add</i>
+                        </a>
+                     </div>
+                 </div>;
+             }
+         });
+
+         const SampleButton = React.createClass({
+            getInitialState: function(){
+                 return {playing: false};
+            },
+            handleClick: function() {
+               this.props.callback(this.props.name);
+               this.setState({playing: true});
+               setTimeout(function() {
+                  this.setState({playing: false});
+               }.bind(this), 2000);
+            },
+            render: function() {
+                  var color = this.state.playing  ? "green" : "blue-grey darken-2";
+                  return <span className="beat">
+                     <a className={"waves-effect waves-light btn-large " + color} onClick={this.handleClick}>
+                     {this.state.playing && <i className="material-icons left">volume_up</i>}
+                     {!this.state.playing && <i className="material-icons left">volume_mute</i>}
+                     {this.props.name}
+                     </a>
+                     { " " }
+                  </span>;
+             }
+         });
+
+         connection.onopen = function (session, details) {
+            console.log("Connected");
+            ReactDOM.render(<App session={session} />, document.getElementById('root'));
+            console.log("Rendered");
+         };
+
+         connection.onclose = function (reason, details) {
+            console.log("Connection lost: " + reason);
+         }
+         connection.open();
+
+      </script>
+   </body>
+</html>
