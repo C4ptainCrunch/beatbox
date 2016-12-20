@@ -16,4 +16,4 @@ Fill `samples/` with mp3 files then go to `http://localhost:8080`` and have fun 
 
 # Screenshot
 
-...
+![](https://github.com/C4ptainCrunch/beatbox/raw/master/.screenshot.png)
