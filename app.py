@@ -16,7 +16,7 @@ class Component(ApplicationSession):
         def get_samples():
             self.log.info("Samples list requested")
             samples = [b[8:-4] for b in glob.glob("samples/*.mp3")]
-            return samples
+            return sorted(samples)
 
         await self.register(get_samples, u'nefliers.beatbox.samples.list')
 
