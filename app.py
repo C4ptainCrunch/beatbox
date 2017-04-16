@@ -25,7 +25,7 @@ class Component(ApplicationSession):
                 ############################################
                 # THIS IS VULNERABLE TO SHELL INJECTIONS ! #
                 ############################################
-                await asyncio.create_subprocess_shell('mplayer -really-quiet −af volume=20:0 "samples/%s.mp3" 2&1> /dev/null' % name)
+                await asyncio.create_subprocess_shell('mplayer -really-quiet −af volume=40:0 "samples/%s.mp3" 2&1> /dev/null' % name)
                 self.log.info("Playing '{song}'", song=name)
 
         await self.register(play_samples, u'nefliers.beatbox.samples.play')
